@@ -1,0 +1,12 @@
+\contentsline {section}{\numberline {I}Aim}{3}{section.1}%
+\contentsline {section}{\numberline {II}Objectives}{3}{section.2}%
+\contentsline {section}{\numberline {III}Literature Review}{3}{section.3}%
+\contentsline {section}{\numberline {IV}Methodology}{3}{section.4}%
+\contentsline {subsection}{\numberline {\mbox {IV-A}}Dataset and Preprocessing}{3}{subsection.4.1}%
+\contentsline {subsection}{\numberline {\mbox {IV-B}}Model Architecture and Training}{3}{subsection.4.2}%
+\contentsline {subsection}{\numberline {\mbox {IV-C}}Train/Test Protocol and Metrics}{3}{subsection.4.3}%
+\contentsline {section}{\numberline {V}Practical Implementation and Discussion}{3}{section.5}%
+\contentsline {subsection}{\numberline {\mbox {V-A}}Results}{3}{subsection.5.1}%
+\contentsline {subsection}{\numberline {\mbox {V-B}}Discussion}{3}{subsection.5.2}%
+\contentsline {section}{\numberline {VI}Conclusion and Recommendation}{4}{section.6}%
+\contentsline {section}{References}{4}{section*.8}%

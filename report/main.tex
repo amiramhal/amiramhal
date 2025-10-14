@@ -21,7 +21,8 @@
 
 % --- Helper macro: include image if it exists, otherwise show a placeholder box ---
 \newcommand{\maybeimage}[2]{% #1 path, #2 width like 0.8\linewidth
-  \IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\fbox{\parbox[c][3cm][c]{0.8\linewidth}{\centering Missing image: #1}}}%
+  % Fallback avoids typesetting the literal path to prevent underscore errors
+  \IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\fbox{\parbox[c][3cm][c]{0.8\linewidth}{\centering Missing image}}}%
 }
 
 \title{Intrusion Detection Using Neural Networks\\[0.25ex]
