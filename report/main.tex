@@ -1,0 +1,134 @@
+% IEEE-style report for Intrusion Detection Using Neural Networks
+\documentclass[conference]{IEEEtran}
+
+% --- Packages ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% --- Ensure page numbers ---
+\pagestyle{plain}
+
+% --- Helper macro: include image if it exists, otherwise show a placeholder box ---
+\newcommand{\maybeimage}[2]{% #1 path, #2 width like 0.8\linewidth
+  % Fallback avoids typesetting the literal path to prevent underscore errors
+  \IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\fbox{\parbox[c][3cm][c]{0.8\linewidth}{\centering Missing image}}}%
+}
+
+\title{Intrusion Detection Using Neural Networks\\[0.25ex]
+\large De Montfort University Dubai\\[1ex]
+\IfFileExists{figs/dmu_logo.png}{\includegraphics[height=1.3cm]{figs/dmu_logo.png}}{\fbox{DMU Dubai Logo}}
+}
+
+\author{\IEEEauthorblockN{Amir Amhal (P2770828)\\Arvin Subramanian (P2940085)\\Neeraj Kaushik (P2959114)}\\
+\IEEEauthorblockA{\textit{School of Computer Science, De Montfort University Dubai}}}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+
+\begin{abstract}
+This report investigates the use of supervised neural networks for network intrusion detection. Using a curated subset of the KDD'99 family of datasets, we implement a multi-layer perceptron (MLP) with one-hot encoded categorical features and standardized numerical attributes. We address severe class imbalance by targeted undersampling and evaluate performance using accuracy, precision, recall, F1-score and a multi-class confusion matrix. The model achieves near-perfect performance on a held-out test split, while we critically discuss generalization risks, dataset artifacts and avenues for robust, real-world deployment.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Intrusion detection, neural networks, KDD99, NSL-KDD, class imbalance, supervised learning, feature encoding.
+\end{IEEEkeywords}
+
+% --- Table of Contents on its own page for readability ---
+{\onecolumn
+\tableofcontents
+\clearpage}
+\twocolumn
+
+\section{Aim}
+The aim is to design, train and empirically evaluate a neural-network-based intrusion detection system (IDS) capable of classifying network connections into attack and benign categories with high precision and recall, while documenting a reproducible pipeline from data processing to model evaluation.
+
+\section{Objectives}
+\begin{enumerate}[leftmargin=*]
+  \item Build a clean, end-to-end pipeline for preprocessing, training, and testing on a representative network traffic dataset.
+  \item Develop and evaluate a multi-class neural network to discriminate among frequent attack types and normal traffic.
+  \item Analyze results with appropriate metrics and discuss limitations, threats to validity, and improvements.
+\end{enumerate}
+
+\section{Literature Review}
+Intrusion detection has evolved from early rule-based and statistical approaches to machine- and deep-learning techniques. Classical foundations include Denning's seminal model of intrusion detection \cite{denning1987intrusion}. The KDD'99 dataset became a de-facto benchmark, though subsequent work exposed issues such as redundancy and skew \cite{tavallaee2009detailed}. Surveys provide comprehensive overviews of IDS taxonomies, architectures and evaluation practices \cite{liao2013intrusion}. With deep learning, feed-forward, recurrent and autoencoder-based approaches have reported strong results on KDD-derived and newer datasets \cite{shone2018deep,yin2017deep,javaid2016deep}. Meanwhile, more realistic datasets such as UNSW-NB15 address modern traffic characteristics and attack families \cite{moustafa2015unsw}. Methodologically, advances such as ReLU networks, dropout, Adam optimization and effective software stacks form today’s standard practice \cite{lecun2015deep,srivastava2014dropout,kingma2015adam,pedregosa2011scikit}.
+
+\section{Methodology}
+\subsection{Dataset and Preprocessing}
+We work with a tabular network-connection dataset with 42 columns (features plus label), structurally aligned with KDD'99/NSL-KDD. We focus on five labels with sufficient support and operational relevance: \textit{neptune.}, \textit{normal.}, \textit{smurf.}, \textit{back.}, and \textit{satan.} The raw class distribution is highly imbalanced (e.g., \textit{smurf.} 280{,}790 samples vs. \textit{satan.} 1{,}589).
+
+To mitigate skew, we apply targeted undersampling: we select 10{,}000 examples each for \textit{neptune.}, \textit{normal.} and \textit{smurf.}, while retaining all available examples for minority classes \textit{back.} (2{,}203) and \textit{satan.} (1{,}589). The resulting balanced working set contains 33{,}792 rows. Categorical attributes (e.g., \texttt{protocol\_type}, \texttt{service}, \texttt{flag}) are one-hot encoded, and numerical features are standardized to zero mean and unit variance using training-split statistics.
+
+\begin{figure}[t]
+  \centering
+  \maybeimage{figs/data_head.png}{0.98\linewidth}
+  \caption{Example rows and columns after loading the dataset (42 columns).}
+  \label{fig:data-head}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \maybeimage{figs/full_distribution.png}{0.98\linewidth}
+  \caption{Full distribution of labels in the source data highlighting severe imbalance.}
+  \label{fig:full-dist}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \maybeimage{figs/class_balance.png}{0.98\linewidth}
+  \caption{Final distribution in the balanced working set (33{,}792 rows).}
+  \label{fig:balanced}
+\end{figure}
+
+\subsection{Model Architecture and Training}
+We adopt a supervised multi-layer perceptron (MLP) classifier with rectified-linear activations, dropout regularization and softmax output for five classes. A representative architecture is: Dense(128)–ReLU \(\rightarrow\) Dropout(0.2) \(\rightarrow\) Dense(64)–ReLU \(\rightarrow\) Dropout(0.2) \(\rightarrow\) Dense(32)–ReLU \(\rightarrow\) Dense(5)–Softmax. The network is trained with categorical cross-entropy loss and Adam optimizer (initial learning rate \(10^{-3}\)), using early stopping on validation loss and mini-batches of size 256. Class weights are not required due to undersampling, but we monitor per-class metrics to detect residual imbalance effects.
+
+\subsection{Train/Test Protocol and Metrics}
+Data are randomly partitioned into training and test splits with stratification. We evaluate accuracy, macro-averaged precision/recall/F1 and visualize the confusion matrix to understand error modes. All preprocessing steps are fit on the training split only and applied to the test split to prevent leakage.
+
+\section{Practical Implementation and Discussion}
+\subsection{Results}
+The model attains strong performance on the held-out test set (5{,}069 examples), with overall accuracy \(\approx 1.00\). Per-class precision, recall and F1-scores are near perfect, with the minority class \textit{satan.} achieving F1 \(\approx 0.99\).
+
+\begin{figure}[t]
+  \centering
+  \maybeimage{figs/confusion_matrix.png}{0.98\linewidth}
+  \caption{Multi-class confusion matrix on the test split. Diagonal dominance indicates excellent separability.}
+  \label{fig:cm}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \maybeimage{figs/classification_report.png}{0.98\linewidth}
+  \caption{Classification report summarizing precision, recall, F1-score and support per class.}
+  \label{fig:cls-report}
+\end{figure}
+
+\subsection{Discussion}
+\textbf{Successes:} Feature engineering with one-hot encoding and standardization combined with undersampling eliminates most class skew, allowing a compact MLP to learn highly discriminative representations. The confusion matrix shows minimal cross-class confusions, especially among high-support classes.
+
+\textbf{Challenges and Threats to Validity:} KDD-derived datasets are known to contain redundant records and artifacts that can inflate performance \cite{tavallaee2009detailed}. The train/test split drawn from the same distribution may not reflect deployment scenarios with non-stationary traffic, novel attacks, or adversarial manipulation. Consequently, near-perfect accuracy should be interpreted cautiously. Moreover, undersampling trades recall for majority classes against representativeness of traffic frequencies.
+
+\textbf{Improvements:} Future work should (i) evaluate on harder, modern corpora such as NSL-KDD and UNSW-NB15 \cite{moustafa2015unsw}, (ii) explore cost-sensitive learning and focal loss for residual imbalance, (iii) calibrate probabilities and use detection operating points tuned to security requirements (e.g., high recall at acceptable false positive rate), (iv) perform cross-validation and hyperparameter search, and (v) incorporate explainability (e.g., permutation importance or SHAP) to support analyst trust and triage.
+
+\section{Conclusion and Recommendation}
+We demonstrated an end-to-end neural IDS pipeline that achieves near-perfect scores on a balanced subset of a KDD'99-style dataset. The results indicate that modest MLPs can effectively separate common DoS and probe patterns from benign traffic when presented with well-engineered tabular features. For production use, we recommend validating on contemporary, diverse datasets; continuously retraining to handle concept drift; implementing streaming feature extraction and model monitoring; and conducting red-team evaluations to test robustness. The approach is readily portable to other intrusion domains (e.g., industrial control networks) with appropriate feature schemas and retraining.
+
+\section*{Acknowledgments}
+We thank the academic guidance within De Montfort University Dubai and the broader open-source ecosystem supporting reproducible ML research.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
